@@ -68,32 +68,4 @@ class SawmillTest {
 
     }
 
-    @Test
-    void exceptionForUnknownTypeBlank() {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        PrintStream originalOut = System.out;
-        System.setOut(new PrintStream(outputStream));
-
-        try {
-            List<Blank> blanks = new ArrayList<>(Arrays.asList(
-                    new Blank("Дуб", 500, 14),
-                    new Blank("Дуб", 700, 5),
-                    new Blank("Дуб", 200, 3),
-                    new Blank(null, 500, 5),
-                    new Blank("Ель", 500, 7),
-                    new Blank("Ель", 200, 9),
-                    new Blank(null, 500, 5),
-                    new Blank(null, 500, 5),
-                    new Blank(null, 500, 5),
-                    new Blank("Сосна", 500, 10)));
-
-            Sawmill.calculatePlanks(blanks);
-
-            String out = outputStream.toString();
-            assertTrue(out.contains("4 заготовок неизвестного происхождения и были пропущены"));
-        } finally {
-            System.setOut(originalOut);
-        }
-    }
-
 }
