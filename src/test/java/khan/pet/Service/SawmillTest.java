@@ -45,7 +45,7 @@ class SawmillTest {
 
         assertNotEquals(5, plankMap.size());
         assertNotEquals(73, plankMap.get("Дуб"));
-        assertNotEquals(55, plankMap.get("Ель"));
+        assertNotEquals(55, plankMap.get("Клён"));
         assertNotEquals(44, plankMap.get("Сосна"));
 
     }
