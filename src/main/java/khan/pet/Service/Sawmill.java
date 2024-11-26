@@ -31,4 +31,8 @@ public class Sawmill {
 
     }
 
+    public void test() {
+
+    }
+
 }
