@@ -29,7 +29,7 @@ class SawmillTest {
     @Test
     void getTypeBlankAndCountPlanksFromListBlanks() {
 
-        Map<String, Integer> plankMap = Sawmill.boardCalculator(blanks);
+        Map<String, Integer> plankMap = Sawmill.calculatePlanks(blanks);
 
         assertEquals(3, plankMap.size());
         assertEquals(76, plankMap.get("Дуб"));
@@ -41,7 +41,7 @@ class SawmillTest {
     @Test
     void negativeGetTypeBlankAndCountPlanksFromListBlanks() {
 
-        Map<String, Integer> plankMap = Sawmill.boardCalculator(blanks);
+        Map<String, Integer> plankMap = Sawmill.calculatePlanks(blanks);
 
         assertNotEquals(5, plankMap.size());
         assertNotEquals(73, plankMap.get("Дуб"));
@@ -53,7 +53,7 @@ class SawmillTest {
     @Test
     void getEmptyResultWhereListIsEmpty() {
         List<Blank> blanks = new ArrayList<>();
-        Map<String, Integer> plankMap = Sawmill.boardCalculator(blanks);
+        Map<String, Integer> plankMap = Sawmill.calculatePlanks(blanks);
 
         assertTrue(plankMap.isEmpty());
 
@@ -62,7 +62,7 @@ class SawmillTest {
     @Test
     void calculatePlanksWithNullBlanks(){
 
-        assertThrows(NullPointerException.class, () -> Sawmill.boardCalculator(null));
+        assertThrows(NullPointerException.class, () -> Sawmill.calculatePlanks(null));
 
     }
 

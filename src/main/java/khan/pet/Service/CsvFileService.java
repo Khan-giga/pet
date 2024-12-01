@@ -39,7 +39,7 @@ public class CsvFileService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return Sawmill.boardCalculator(blanks);
+        return Sawmill.calculatePlanks(blanks);
     }
 
     public void csvSaver() {

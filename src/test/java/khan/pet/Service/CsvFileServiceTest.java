@@ -1,5 +1,6 @@
 package khan.pet.Service;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,13 +18,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CsvFileServiceTest {
 
-    private CsvFileService csvFileService;
+    private static CsvFileService csvFileService;
 
-    @BeforeEach
-    void setUp() throws IOException {
+    @BeforeAll
+    static void setUp() {
         csvFileService = new CsvFileService("src/test/resources/input.csv",
                 "src/test/resources/output.csv");
+    }
 
+    @BeforeEach
+    void clearCsvFile() throws IOException {
         Path path = Paths.get("src/test/resources/output.csv");
         Files.deleteIfExists(path);
     }
