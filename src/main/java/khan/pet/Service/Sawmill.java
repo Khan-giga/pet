@@ -6,6 +6,7 @@ import khan.pet.exception.UnknownWoodException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class Sawmill {
 
@@ -27,7 +28,8 @@ public class Sawmill {
                 if (blank.getType() == null) {
                     throw new UnknownWoodException("Неизвестный тип заготовки");
                 }
-                int blPerMeter = PRODUCT_PER_METER.getOrDefault(blank.getDiameter(), 0);
+                int blPerMeter = validDiameter(blank.getDiameter())
+                        .orElseGet(() -> defaultDiameter(blank.getDiameter()));
                 int useLength = blank.getLength() / 2;
                 int planks = blPerMeter * useLength;
                 boardsByType.put(blank.getType(), boardsByType.getOrDefault(blank.getType(), 0) + planks);
@@ -42,6 +44,20 @@ public class Sawmill {
 
         return boardsByType;
 
+    }
+
+    private static Optional<Integer> validDiameter(int diameter) {
+        return Optional.ofNullable(PRODUCT_PER_METER.get(diameter));
+    }
+
+    private static Integer defaultDiameter(int diameter) {
+        if (diameter > 0 && diameter < 300) {
+            return PRODUCT_PER_METER.get(200);
+        } else if (diameter >= 600) {
+            return PRODUCT_PER_METER.get(700);
+        } else {
+            return PRODUCT_PER_METER.get(500);
+        }
     }
 
 }
