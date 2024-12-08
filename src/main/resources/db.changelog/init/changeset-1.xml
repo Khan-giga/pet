@@ -52,5 +52,33 @@
             </column>
         </createTable>
     </changeSet>
+    
+    <changeSet id="1733683054432-1" author="kan-giga">
+        <addForeignKeyConstraint baseTableName="workpieces" baseColumnNames="wood_types_id"
+                                 constraintName="FK_workpieces_wood_types"
+                                 referencedTableName="wood_types"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="1733683737411-1" author="khan-giga">
+        <addForeignKeyConstraint baseTableName="workpieces" baseColumnNames="workpiece_diameter_id"
+                                 constraintName="FK_workpiece_diameter"
+                                 referencedTableName="workpiece_diameter"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="1733683980566-1" author="kan-giga">
+        <addForeignKeyConstraint baseTableName="boards" baseColumnNames="wood_types_id"
+                                 constraintName="FK_boards_wood_types"
+                                 referencedTableName="wood_types"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="1733684087048-1" author="khan-giga">
+        <addForeignKeyConstraint baseTableName="boards" baseColumnNames="workpieces_id"
+                                 constraintName="FK_boards_workpieces"
+                                 referencedTableName="workpieces"
+                                 referencedColumnNames="id"/>
+    </changeSet>
 
 </databaseChangeLog>
