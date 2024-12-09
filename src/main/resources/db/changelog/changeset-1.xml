@@ -7,7 +7,7 @@
     
     <changeSet id="1733657927648-1" author="khan-giga">
         <createTable tableName="wood_types">
-            <column name="id" type="BIG SERIAL">
+            <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="name" type="VARCHAR(128)"/>
@@ -16,7 +16,7 @@
     
     <changeSet id="1733658390649-1" author="khan-giga">
         <createTable tableName="workpiece_diameter">
-            <column name="id" type="BIG SERIAL">
+            <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="milimeters_diameter" type="INTEGER"/>
@@ -26,7 +26,7 @@
     
     <changeSet id="1733679708672-1" author="khan-giga">
         <createTable tableName="workpieces">
-            <column name="id" type="BIG SERIAL">
+            <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="wood_types_id" type="BIGINT">

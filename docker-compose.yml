@@ -31,7 +31,7 @@ services:
     environment:
       DYNAMIC_CONFIG_ENABLED: true
 
-  user-db:
+  p-db:
     image: postgres:latest
     ports:
       - "5488:5432"
