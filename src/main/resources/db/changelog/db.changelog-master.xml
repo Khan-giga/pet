@@ -3,5 +3,7 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
-    <includeAll path="db.changelog/init/changeset-1.xml"/>
+    <include file="changeset-1.xml" relativeToChangelogFile="true"/>
+    <include file="insert-changeset-wood-type-table.xml" relativeToChangelogFile="true"/>
+    <include file="insert-changeset-workpiece-diameter-table.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
