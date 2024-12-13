@@ -1,6 +1,6 @@
 package khan.pet.Service;
 
-import khan.pet.entity.Blank;
+import khan.pet.dto.request.Blank;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -33,7 +33,7 @@ public class CsvFileService {
             blanks = Files.readAllLines(path).stream()
                     .map(str -> {
                         String[] fields = str.split(",");
-                        return new Blank(fields[0], Integer.parseInt(fields[1]), Integer.parseInt(fields[2]));
+                        return new Blank(fields[0], Integer.parseInt(fields[1]), Long.parseLong(fields[2]));
                     })
                     .collect(Collectors.toList());
         } catch (IOException e) {
