@@ -35,8 +35,6 @@ public class Sawmill {
             return new HashMap<>();
         }
 
-        Map<String, Long> result = new HashMap<>();
-
         for (Blank blank : blanks) {
             WoodType woodType = woodTypeRepository.findWoodTypeByName(blank.getType()).orElseThrow(UnknownWoodException::new);
             WorkpieceDiameter workpieceDiameter = workpieceDiameterRepository
@@ -49,11 +47,9 @@ public class Sawmill {
             for (int i = 0; i < planks; i++) {
                 boardRepository.saveBoard(Board.builder().woodTypes(woodType).workpieces(workpiece).build());
             }
-            result.put(blank.getType(), result.getOrDefault(blank.getType(), 0L) + planks);
-
         }
 
-        return result;
+        return boardRepository.findQuantityByType();
 
     }
 

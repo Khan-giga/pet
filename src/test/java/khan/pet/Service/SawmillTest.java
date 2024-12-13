@@ -1,16 +1,14 @@
 package khan.pet.Service;
 
 import khan.pet.dto.request.Blank;
-import khan.pet.dto.response.ResponseDto;
-import khan.pet.entity.Board;
-import khan.pet.entity.Workpiece;
-import khan.pet.repository.WoodTypeRepository;
-import khan.pet.repository.WorkpieceRepository;
+import khan.pet.repository.BoardRepository;
 import khan.pet.util.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
@@ -77,6 +75,17 @@ class SawmillTest {
         Map<String, Long> map = new HashMap<>();
 
         assertEquals(map, Sawmill.calculatePlanksForDb(null));
+
+    }
+
+    @Test
+    void deleteBoardsByType() {
+        Map<String, Long> map = Sawmill.calculatePlanksForDb(blanks);
+        BoardRepository boardRepository = new BoardRepository();
+        boardRepository.deleteByType("Дуб");
+        Map<String, Long> map2 = boardRepository.findQuantityByType();
+
+        assertNotEquals(map.values().size(), map2.values().size());
 
     }
 

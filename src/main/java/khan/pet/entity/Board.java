@@ -19,11 +19,11 @@ public class Board {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "wood_types_id", nullable = false)
     private WoodType woodTypes;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "workpieces_id", nullable = false)
     private Workpiece workpieces;
 
