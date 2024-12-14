@@ -30,28 +30,7 @@ public class GroupProcessorService {
 
     public void processAllGroup() {
         ExecutorService pool = Executors.newFixedThreadPool(2);
-
-        for (List<Blank> blanks : blankGroup) {
-            String type = blanks.stream()
-                    .findFirst()
-                    .orElseGet(() -> new Blank("", 0, 0))
-                    .getType();
-            if (type == null) {
-                throw new UnknownWoodException("Неизвестный тип заготовки");
-            }
-            Path path = Paths.get(outputCsv + type + ".csv");
-            pool.submit(() -> {
-                try (BufferedWriter writer = Files.newBufferedWriter(path)) {
-                    for (Map.Entry<String, Integer> entry : Sawmill.calculatePlanks(blanks).entrySet()) {
-                        writer.write(String.format("%s,%d", entry.getKey(), entry.getValue()));
-                        writer.newLine();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        }
-
+        processBlanks(pool);
         pool.shutdown();
         try {
             if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
@@ -62,6 +41,44 @@ public class GroupProcessorService {
             Thread.currentThread().interrupt();
         }
 
+    }
+
+    private void processBlanks(ExecutorService pool) {
+        for (List<Blank> blanks : blankGroup) {
+            String type = getType(blanks);
+            Path path = getPath(type);
+            pool.submit(() -> processBlanks(blanks, path));
+        }
+    }
+
+    private Path getPath(String type) {
+        return Paths.get(outputCsv + type + ".csv");
+    }
+
+    private static void processBlanks(String type) {
+        if (type == null) {
+            throw new UnknownWoodException("Неизвестный тип заготовки");
+        }
+    }
+
+    private static String getType(List<Blank> blanks) {
+        String type = blanks.stream()
+                .findFirst()
+                .orElseGet(() -> new Blank("", 0, 0))
+                .getType();
+        processBlanks(type);
+        return type;
+    }
+
+    private static void processBlanks(List<Blank> blanks, Path path) {
+        try (BufferedWriter writer = Files.newBufferedWriter(path)) {
+            for (Map.Entry<String, Integer> entry : Sawmill.calculatePlanks(blanks).entrySet()) {
+                writer.write(String.format("%s,%d", entry.getKey(), entry.getValue()));
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }
