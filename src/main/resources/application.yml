@@ -1,0 +1,23 @@
+
+spring:
+  application:
+    name: pet-service
+  datasource:
+    url: jdbc:postgresql://localhost:5488/postgres
+    username: user
+    password: root
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        order_insert: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    database: postgresql
+
+  liquibase:
+    enabled: false
+    change-log: db/changelog/db.changelog-master.xml
