@@ -23,6 +23,7 @@ class SawmillTest {
                 new Blank("Дуб", 200, 3),
                 new Blank("Ель", 500, 7),
                 new Blank("Ель", 200, 9),
+                new Blank("Ель", 300, 5),
                 new Blank("Сосна", 500, 10)));
     }
 
@@ -33,7 +34,7 @@ class SawmillTest {
 
         assertEquals(3, plankMap.size());
         assertEquals(76, plankMap.get("Дуб"));
-        assertEquals(33, plankMap.get("Ель"));
+        assertEquals(47, plankMap.get("Ель"));
         assertEquals(35, plankMap.get("Сосна"));
 
     }
