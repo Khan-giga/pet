@@ -2,7 +2,6 @@ package khan.pet.Service;
 
 import khan.pet.entity.Blank;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,18 +18,14 @@ public class Sawmill {
     }
 
     public static Map<String, Integer> calculatePlanks(List<Blank> blanks) {
+        return blanks.stream()
+                .collect(Collectors.groupingBy(Blank::getType, Collectors.summingInt(Sawmill::extracted)));
+    }
 
-        Map<String, Integer> result = new HashMap<>();
-
-        result = blanks.stream()
-                .collect(Collectors.groupingBy(Blank::getType, Collectors.summingInt(blank -> {
-                    int blPerMeter = PRODUCT_PER_METER.getOrDefault(blank.getDiameter(), 0);
-                    int useLength = blank.getLength() / 2;
-                    return blPerMeter * useLength;
-                })));
-
-        return result;
-
+    private static int extracted(Blank blank) {
+        int blPerMeter = PRODUCT_PER_METER.getOrDefault(blank.getDiameter(), 0);
+        int useLength = blank.getLength() / 2;
+        return blPerMeter * useLength;
     }
 
 }
