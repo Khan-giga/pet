@@ -1,7 +1,6 @@
 package khan.pet.Service;
 
 import khan.pet.entity.Blank;
-import khan.pet.exception.UnknownWoodException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,18 +23,12 @@ public class Sawmill {
         int unknownBoardType = 0;
 
         for (Blank blank : blanks) {
-            try {
-                if (blank.getType() == null) {
-                    throw new UnknownWoodException("Неизвестный тип заготовки");
-                }
-                int blPerMeter = validDiameter(blank.getDiameter())
-                        .orElseGet(() -> defaultDiameter(blank.getDiameter()));
-                int useLength = blank.getLength() / 2;
-                int planks = blPerMeter * useLength;
-                boardsByType.put(blank.getType(), boardsByType.getOrDefault(blank.getType(), 0) + planks);
-            } catch (UnknownWoodException e) {
+            if (blank.getType() == null) {
                 unknownBoardType++;
+                continue;
             }
+            int planks = getPlanks(blank);
+            boardsByType.put(blank.getType(), boardsByType.getOrDefault(blank.getType(), 0) + planks);
         }
 
         if (unknownBoardType > 0) {
@@ -46,11 +39,14 @@ public class Sawmill {
 
     }
 
-    private static Optional<Integer> validDiameter(int diameter) {
-        return Optional.ofNullable(PRODUCT_PER_METER.get(diameter));
+    private static int getPlanks(Blank blank) {
+        int blPerMeter = Optional.ofNullable(PRODUCT_PER_METER.get(blank.getDiameter()))
+                .orElseGet(() -> getClosestProductForDiameter(blank.getDiameter()));
+        int useLength = blank.getLength() / 2;
+        return blPerMeter * useLength;
     }
 
-    private static Integer defaultDiameter(int diameter) {
+    private static Integer getClosestProductForDiameter(int diameter) {
         if (diameter > 0 && diameter < 300) {
             return PRODUCT_PER_METER.get(200);
         } else if (diameter >= 600) {
