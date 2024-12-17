@@ -1,12 +1,21 @@
 package khan.pet.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.proxy.HibernateProxy;
 
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
+
+@Builder
+@Setter
+@Getter
 @Entity
 @Table(name = "workpieces")
+@AllArgsConstructor
+@NoArgsConstructor
 public class Workpiece {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,47 +33,23 @@ public class Workpiece {
     @Column(name = "meters_length")
     private Long metersLength;
 
-    @OneToMany(mappedBy = "workpieces")
+    @OneToMany(mappedBy = "workpieces", cascade = CascadeType.ALL)
     private Set<Board> boards = new LinkedHashSet<>();
 
-    public Long getId() {
-        return id;
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        Workpiece workpiece = (Workpiece) o;
+        return getId() != null && Objects.equals(getId(), workpiece.getId());
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public WoodType getWoodTypes() {
-        return woodTypes;
-    }
-
-    public void setWoodTypes(WoodType woodTypes) {
-        this.woodTypes = woodTypes;
-    }
-
-    public WorkpieceDiameter getWorkpieceDiameter() {
-        return workpieceDiameter;
-    }
-
-    public void setWorkpieceDiameter(WorkpieceDiameter workpieceDiameter) {
-        this.workpieceDiameter = workpieceDiameter;
-    }
-
-    public Long getMetersLength() {
-        return metersLength;
-    }
-
-    public void setMetersLength(Long metersLength) {
-        this.metersLength = metersLength;
-    }
-
-    public Set<Board> getBoards() {
-        return boards;
-    }
-
-    public void setBoards(Set<Board> boards) {
-        this.boards = boards;
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 
 }

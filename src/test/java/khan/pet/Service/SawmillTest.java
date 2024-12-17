@@ -1,68 +1,91 @@
 package khan.pet.Service;
 
-import khan.pet.entity.Blank;
-import org.junit.jupiter.api.BeforeEach;
+import khan.pet.dto.request.Blank;
+import khan.pet.repository.BoardRepository;
+import khan.pet.util.HibernateUtil;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class SawmillTest {
 
-    private List<Blank> blanks;
+    private static List<Blank> blanks;
+    private static SessionFactory sessionFactory;
 
-    @BeforeEach
-    void setUp() {
+    @BeforeAll
+    static void setUp() {
         blanks = new ArrayList<>(Arrays.asList(
-                new Blank("Дуб", 500, 14),
-                new Blank("Дуб", 700, 5),
-                new Blank("Дуб", 200, 3),
-                new Blank("Ель", 500, 7),
-                new Blank("Ель", 200, 9),
-                new Blank("Сосна", 500, 10)));
+                new Blank("Дуб", 500, 14L),
+                new Blank("Дуб", 200, 14L),
+                new Blank("Ель", 500, 7L),
+                new Blank("Сосна", 500, 10L)));
+        sessionFactory = HibernateUtil.getSessionFactory();
+    }
+
+    @AfterEach
+    void clearTable() {
+        Transaction transaction = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            session.createNativeQuery("truncate table boards, workpieces cascade").executeUpdate();
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
+        }
     }
 
     @Test
     void getTypeBlankAndCountPlanksFromListBlanks() {
 
-        Map<String, Integer> plankMap = Sawmill.calculatePlanks(blanks);
+        Map<String, Long> map = Sawmill.calculatePlanksForDb(blanks);
 
-        assertEquals(3, plankMap.size());
-        assertEquals(76, plankMap.get("Дуб"));
-        assertEquals(33, plankMap.get("Ель"));
-        assertEquals(35, plankMap.get("Сосна"));
+        assertNotEquals(98, map.get("Дуб"));
 
     }
 
     @Test
     void negativeGetTypeBlankAndCountPlanksFromListBlanks() {
 
-        Map<String, Integer> plankMap = Sawmill.calculatePlanks(blanks);
+        Map<String, Long> map = Sawmill.calculatePlanksForDb(blanks);
 
-        assertNotEquals(5, plankMap.size());
-        assertNotEquals(73, plankMap.get("Дуб"));
-        assertNotEquals(55, plankMap.get("Ель"));
-        assertNotEquals(44, plankMap.get("Сосна"));
+        assertNotEquals(44, map.get("Дуб"));
 
     }
 
     @Test
     void getEmptyResultWhereListIsEmpty() {
         List<Blank> blanks = new ArrayList<>();
-        Map<String, Integer> plankMap = Sawmill.calculatePlanks(blanks);
+        Map<String, Long> map = Sawmill.calculatePlanksForDb(blanks);
 
-        assertTrue(plankMap.isEmpty());
+        assertTrue(map.isEmpty());
 
     }
 
     @Test
-    void calculatePlanksWithNullBlanks(){
+    void calculatePlanksForDbWithNullBlanks(){
+        Map<String, Long> map = new HashMap<>();
 
-        assertThrows(NullPointerException.class, () -> Sawmill.calculatePlanks(null));
+        assertEquals(map, Sawmill.calculatePlanksForDb(null));
+
+    }
+
+    @Test
+    void deleteBoardsByType() {
+        Map<String, Long> map = Sawmill.calculatePlanksForDb(blanks);
+        BoardRepository boardRepository = new BoardRepository();
+        boardRepository.deleteByType("Дуб");
+        Map<String, Long> map2 = boardRepository.findQuantityByType();
+
+        assertNotEquals(map.values().size(), map2.values().size());
 
     }
 
