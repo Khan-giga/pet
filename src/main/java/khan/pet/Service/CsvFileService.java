@@ -1,6 +1,6 @@
 package khan.pet.Service;
 
-import khan.pet.dto.request.Blank;
+import khan.pet.dto.Blank;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
