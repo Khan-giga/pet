@@ -1,26 +1,29 @@
 package khan.pet.Service;
 
-import khan.pet.dto.request.Blank;
+import jakarta.transaction.Transactional;
+import khan.pet.dto.QuantityByTypeDto;
+import khan.pet.dto.Blank;
 import khan.pet.entity.Board;
 import khan.pet.entity.WoodType;
 import khan.pet.entity.Workpiece;
 import khan.pet.entity.WorkpieceDiameter;
 import khan.pet.exception.UnknownWoodException;
-import khan.pet.repository.BoardRepository;
-import khan.pet.repository.WoodTypeRepository;
-import khan.pet.repository.WorkpieceDiameterRepository;
-import khan.pet.repository.WorkpieceRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
+@Service
 public class Sawmill {
 
-    private static final WoodTypeRepository woodTypeRepository = new WoodTypeRepository();
-    private static final BoardRepository boardRepository = new BoardRepository();
-    private static final WorkpieceRepository workpieceRepository = new WorkpieceRepository();
-    private static final WorkpieceDiameterRepository workpieceDiameterRepository = new WorkpieceDiameterRepository();
+    private final WoodTypeService woodTypeService;
+    private final BoardService boardService;
+    private final WorkpieceService workpieceService;
+    private final WorkpiceceDiameterService workpiceceDiameterService;
 
     private static final Map<Integer, Integer> PRODUCT_PER_METER = new HashMap<>();
 
@@ -30,26 +33,36 @@ public class Sawmill {
         PRODUCT_PER_METER.put(700, 12);
     }
 
-    public static Map<String, Long> calculatePlanksForDb(List<Blank> blanks) {
+
+    @Transactional
+    public Map<String, Long> calculatePlanksForDb(List<Blank> blanks) {
         if (blanks == null || blanks.isEmpty()) {
             return new HashMap<>();
         }
 
         for (Blank blank : blanks) {
-            WoodType woodType = woodTypeRepository.findWoodTypeByName(blank.getType()).orElseThrow(UnknownWoodException::new);
-            WorkpieceDiameter workpieceDiameter = workpieceDiameterRepository
-                    .findWorkpieceDiameterByDiameter(blank.getDiameter()).orElseThrow();
-            Workpiece workpiece = workpieceRepository
-                    .saveWorkpiece(woodType, workpieceDiameter, blank.getLength());
+            WoodType woodType = woodTypeService.findByName(blank.getType()).orElseThrow(UnknownWoodException::new);
+            WorkpieceDiameter workpieceDiameter = workpiceceDiameterService
+                    .findByDiameter(blank.getDiameter()).orElseThrow();
+            Workpiece workpiece = workpieceService
+                    .save(Workpiece.builder()
+                            .woodTypes(woodType)
+                            .workpieceDiameter(workpieceDiameter)
+                            .metersLength(blank.getLength()).build());
 
             long planks = getPlanks(blank, workpieceDiameter);
 
             for (int i = 0; i < planks; i++) {
-                boardRepository.saveBoard(Board.builder().woodTypes(woodType).workpieces(workpiece).build());
+                boardService.saveBoard(Board.builder().woodTypes(woodType).workpieces(workpiece).build());
             }
         }
 
-        return boardRepository.findQuantityByType();
+        return boardService.findQuantityByType().stream()
+                .collect(Collectors.toMap(
+                        QuantityByTypeDto::type,
+                        QuantityByTypeDto::quantity,
+                        Long::sum
+                ));
 
     }
 

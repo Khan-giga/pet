@@ -1,4 +1,4 @@
-package khan.pet.dto.request;
+package khan.pet.dto;
 
 import lombok.Getter;
 import lombok.Setter;
