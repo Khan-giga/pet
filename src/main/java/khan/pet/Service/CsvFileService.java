@@ -111,7 +111,8 @@ public class CsvFileService {
         Set<Long> errorParties = new HashSet<>();
         long fileSize;
 
-        try (BufferedReader reader = Files.newBufferedReader(saveToTemplateFile(file), StandardCharsets.UTF_8)) {
+        Path tempFile = null;
+        try (BufferedReader reader = Files.newBufferedReader(tempFile = saveToTemplateFile(file), StandardCharsets.UTF_8)) {
             String header = reader.readLine();
             if (header == null || !header.equals("part_number, type, diameter, length")) {
                 throw new IllegalArgumentException("Некорректный формат");
@@ -125,7 +126,14 @@ public class CsvFileService {
                     ))
                     .toList();
 
-            CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0])).join();
+            Path finalTempFile = tempFile;
+            CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0])).whenComplete((result, ex) -> {
+                try {
+                    Files.deleteIfExists(finalTempFile);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).join();;
 
         } catch (IOException e) {
             throw new RuntimeException(e);
