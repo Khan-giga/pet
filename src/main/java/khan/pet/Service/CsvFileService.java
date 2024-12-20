@@ -1,23 +1,42 @@
 package khan.pet.Service;
 
 import khan.pet.dto.Blank;
+import khan.pet.dto.request.RequestPartDto;
+import khan.pet.entity.FileStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+@Service
 public class CsvFileService {
-    private final String inputCsv;
-    private final String outputCsv;
+    private String inputCsv;
+    private String outputCsv;
+    private final ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+    private PartService partService;
+    private FileStatusService fileStatusService;
 
     public CsvFileService() {
         inputCsv = "src/main/resources/input.csv";
         outputCsv = "src/main/resources/output.csv";
+    }
+
+    @Autowired
+    public CsvFileService(PartService partService, FileStatusService fileStatusService) {
+        this.partService = partService;
+        this.fileStatusService = fileStatusService;
     }
 
     public CsvFileService(String inputCsv, String outputCsv) {
@@ -55,4 +74,115 @@ public class CsvFileService {
         }
     }
 
+    public String startAsyncProcessing(MultipartFile file) {
+
+        FileStatus fileStatus = new FileStatus();
+        fileStatus.setName(file.getOriginalFilename());
+        fileStatus.setStatus("Принят в обработку");
+
+        FileStatus persFileStatus = fileStatusService.saveFileStatus(fileStatus);
+        CompletableFuture.runAsync(() -> {
+            try {
+                Map<Long, List<Blank>> map = processCsv(file);
+                List<RequestPartDto> partDtos = new ArrayList<>();
+                map.forEach((k, v) -> partDtos.add(RequestPartDto.builder()
+                        .partyNumber(k)
+                        .blanks(v)
+                        .build()));
+                partDtos.forEach(partService::savePart);
+
+                persFileStatus.setStatus("Обработан");
+                fileStatusService.saveFileStatus(persFileStatus);
+            } catch (Exception e) {
+                persFileStatus.setStatus("Обработан частично");
+                persFileStatus.setComment(e.getMessage());
+                fileStatusService.saveFileStatus(persFileStatus);
+            }
+
+        });
+
+        return "Файл: " + file.getOriginalFilename() + " принят в обработку!";
+
+    }
+
+    private Map<Long, List<Blank>> processCsv(MultipartFile file) {
+        Map<Long, List<Blank>> map = new ConcurrentHashMap<>();
+        AtomicInteger filedLines = new AtomicInteger();
+        Set<Long> errorParties = new HashSet<>();
+        long fileSize;
+
+        Path tempFile = null;
+        try (BufferedReader reader = Files.newBufferedReader(tempFile = saveToTemplateFile(file), StandardCharsets.UTF_8)) {
+            String header = reader.readLine();
+            if (header == null || !header.equals("part_number, type, diameter, length")) {
+                throw new IllegalArgumentException("Некорректный формат");
+            }
+            fileSize = reader.lines().count() - 1;
+
+            List<CompletableFuture<Void>> tasks = reader.lines()
+                    .map(line -> CompletableFuture.runAsync(
+                            () -> lineProcess(line, map, filedLines, errorParties),
+                            executorService
+                    ))
+                    .toList();
+
+            Path finalTempFile = tempFile;
+            CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0])).whenComplete((result, ex) -> {
+                try {
+                    Files.deleteIfExists(finalTempFile);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).join();;
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (!errorParties.isEmpty()) {
+            String message = "Обработано %d партий из %d. Ошибки возникли при обработке партий: %s".formatted(
+                    filedLines.get(), fileSize, errorParties.stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(", "))
+            );
+
+            throw new RuntimeException(message);
+
+        }
+
+        return map;
+
+    }
+
+    private void lineProcess(String finalLine, Map<Long, List<Blank>> map, AtomicInteger filedLines, Set<Long> errorParties) {
+        try {
+            String[] fields = finalLine.split(",");
+            if (fields.length != 4) {
+                throw new IllegalArgumentException("Некорректный формат");
+            }
+
+            Long partNumber = Long.parseLong(fields[0]);
+            String type = fields[1];
+            Integer diameter = Integer.parseInt(fields[2]);
+            Long length = Long.parseLong(fields[3]);
+
+            Blank blank = Blank.builder()
+                    .type(type)
+                    .diameter(diameter)
+                    .length(length)
+                    .build();
+
+            map.computeIfAbsent(partNumber, k -> new ArrayList<>()).add(blank);
+            filedLines.incrementAndGet();
+        } catch (IllegalArgumentException e) {
+            errorParties.add(Long.parseLong(finalLine.split(",")[0]));
+            throw new RuntimeException("Ошибка при обработке строки " + e.getMessage());
+        }
+    }
+
+    private Path saveToTemplateFile(MultipartFile file) throws IOException {
+        Path path = Files.createTempFile("upload", ".csv");
+        Files.write(path, file.getBytes());
+        return path;
+    }
 }
