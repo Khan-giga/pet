@@ -107,7 +107,6 @@ public class CsvFileService {
 
     private Map<Long, List<Blank>> processCsv(MultipartFile file) {
         Map<Long, List<Blank>> map = new ConcurrentHashMap<>();
-        List<Future<?>> futureList = new ArrayList<>();
         AtomicInteger filedLines = new AtomicInteger();
         Set<Long> errorParties = new HashSet<>();
         long fileSize;
@@ -119,20 +118,16 @@ public class CsvFileService {
             }
             fileSize = reader.lines().count() - 1;
 
-            String line;
-            while ((line = reader.readLine()) != null) {
-                final String finalLine = line;
-                Future<?> future = executorService.submit(() -> {
-                    lineProcess(finalLine, map, filedLines, errorParties);
-                });
+            List<CompletableFuture<Void>> tasks = reader.lines()
+                    .map(line -> CompletableFuture.runAsync(
+                            () -> lineProcess(line, map, filedLines, errorParties),
+                            executorService
+                    ))
+                    .toList();
 
-                futureList.add(future);
+            CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0])).join();
 
-            }
-
-            future(futureList);
-
-        } catch (IOException | ExecutionException | InterruptedException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
@@ -174,12 +169,6 @@ public class CsvFileService {
         } catch (IllegalArgumentException e) {
             errorParties.add(Long.parseLong(finalLine.split(",")[0]));
             throw new RuntimeException("Ошибка при обработке строки " + e.getMessage());
-        }
-    }
-
-    private void future(List<Future<?>> futureList) throws InterruptedException, ExecutionException {
-        for (Future<?> future : futureList) {
-            future.get();
         }
     }
 
