@@ -91,7 +91,7 @@ public class CsvFileService {
                         .build()));
                 partDtos.forEach(partService::savePart);
 
-                persFileStatus.setName("Обработан");
+                persFileStatus.setStatus("Обработан");
                 fileStatusService.saveFileStatus(persFileStatus);
             } catch (Exception e) {
                 persFileStatus.setStatus("Обработан частично");
